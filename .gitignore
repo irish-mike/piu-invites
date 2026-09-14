@@ -6,6 +6,7 @@
 next-env.d.ts
 npm-debug.log*
 .env*
+!.env.example
 *.pem
 
 # Editors and IDEs

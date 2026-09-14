@@ -117,7 +117,7 @@
   top: 73%;
   width: 49%;
   rotate: 3.3deg;
-  z-index: 6;
+  z-index: 4;
 }
 
 .cyclist .imageWindow {
@@ -179,6 +179,7 @@
     top: 65%;
     width: 35%;
     rotate: 3.3deg;
+    translate: 15% 0;
   }
 }
 
