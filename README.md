@@ -3,13 +3,13 @@
 An event interest-registration website for **Hocus Pocus Halloween Party 2026**, organised by PIÙ.
 Registering expresses interest, not a commitment to attend.
 
-**Status: Stage 5 — public interest milestone. Development is local only.**
-The event page submits full name and email through a server-validated endpoint to Formspark. A server-rendered interest message shows rounded milestones from unique emails, hidden below 30. It refreshes roughly every five minutes and disappears if retrieval fails. Registration retains its accessible errors and plain success state. Animation, spam protection, analytics, and deployment remain deferred. Real Formspark submission, read access, and confirmation-email delivery require configuration and live verification.
+**Status: Stage 6 — registration success experience. Development is local only.**
+The event page submits full name and email through a server-validated endpoint to Formspark. Confirmed success runs a blackout and an animated jump scare with a shifting, flickering entrance and exit before settling on the final copy; reduced motion skips the effect. A server-rendered interest message shows rounded milestones from unique emails, hidden below 30. It refreshes roughly every five minutes and disappears if retrieval fails. Spam protection, analytics, and deployment remain deferred. Real Formspark submission, read access, and confirmation-email delivery require configuration and live verification.
 
 ## Stack
 
 Next.js 16 App Router, React 19, strict TypeScript, Tailwind CSS 4, and ESLint.
-Zod validates registrations and the API response contract. Motion remains unused until the animation stage.
+Zod validates registrations and the API response contract. Motion controls the success blackout, animated-image entrance and exit, and text reveal. A local CSS module handles framing.
 The form uses native HTML controls; shadcn/ui is not needed for this stage.
 
 ## Local development
@@ -40,7 +40,7 @@ npm run build
 Linting rejects warnings. Type checking generates Next.js route types before running TypeScript, so it also works
 before the first build. The build does not replace the lint command.
 To inspect the production build locally, run `npm start` after building and open the same local URL.
-Tests use Node’s built-in runner with `tsx` for TypeScript. They cover registration, unique-email counting, milestone boundaries, and Formspark pagination/failures. External HTTP is replaced; tests never access a real Formspark account.
+Tests use Node’s built-in runner with `tsx` for TypeScript. They cover registration, success state transitions including reduced motion, unique-email counting, milestone boundaries, and Formspark pagination/failures. External HTTP is replaced; tests never access a real Formspark account. See [registration verification](docs/registration.md#verification) for visual and accessibility checks.
 
 ## Architecture and guidance
 

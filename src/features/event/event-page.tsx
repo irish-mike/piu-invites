@@ -68,6 +68,9 @@ export function EventPage(): ReactElement {
               <p className={subtitleClasses}>
                 HALLOWEEN PARTY 2026
               </p>
+            </header>
+
+            <RegistrationForm>
               <div aria-hidden="true" className="mx-auto my-7 h-px w-12 bg-amber/70 sm:my-8" />
               <p className="font-editorial text-lg leading-relaxed sm:text-xl">
                 Saturday 31st October
@@ -75,21 +78,17 @@ export function EventPage(): ReactElement {
               <p className="mt-2 font-editorial text-xs leading-relaxed text-muted sm:text-sm">
                 Gates 7pm · Secret location
               </p>
-            </header>
-
-            <div className="mx-auto mt-9 max-w-lg sm:mt-10">
               <p
                 id="registration-intro"
-                className="mx-auto max-w-md text-balance font-editorial text-sm leading-7 text-parchment/90"
+                className="mx-auto mt-9 max-w-md text-balance font-editorial text-sm leading-7 text-parchment/90 sm:mt-10"
               >
                 Register your interest for early ticket offers, party updates and arrival perks.
               </p>
-              <RegistrationForm />
-              <div className="relative">
-                <Suspense fallback={null}>
-                  <InterestMessage />
-                </Suspense>
-              </div>
+            </RegistrationForm>
+            <div className="relative mx-auto max-w-lg">
+              <Suspense fallback={null}>
+                <InterestMessage />
+              </Suspense>
             </div>
           </div>
         </div>

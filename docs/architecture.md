@@ -6,7 +6,7 @@ A one-page event interest-registration website for **Hocus Pocus Halloween Party
 Registration will express interest, not a commitment to attend.
 Multi-event support is outside the current scope.
 
-Stage 5 adds a public interest milestone based on unique registered emails. Registration still validates and submits full name and email through Next.js to Formspark, with plain success and error states. Everything described below as planned is unimplemented.
+Stage 6 adds the registration success choreography, while preserving the public interest milestone based on unique registered emails. Registration validates and submits full name and email through Next.js to Formspark. Everything described below as planned is unimplemented.
 Development is local only. The eventual hostname is `hocus-pocus-halloween-party.piuinvites.org`;
 no hostname or deployment configuration is introduced here.
 
@@ -37,7 +37,7 @@ Code becomes shared only when more than one feature genuinely needs it.
 - Use npm and commit its lockfile for reproducible installation; no package manager was previously established.
 - Use stable framework features without experimental flags or React Compiler configuration. Enable Cache Components for Next.js 16.3’s recommended `use cache`/`cacheLife` APIs; do not use the superseded `unstable_cache` API.
 - Use ESLint with Next.js Core Web Vitals and TypeScript rules, and a separate TypeScript check.
-- Zod validates registrations on the server and API responses in the client. Motion remains installed for the later animation stage and is not imported.
+- Zod validates registrations on the server and API responses in the client. Motion controls the success blackout, image movement and opacity, and text reveal; CSS owns image framing.
 - Native labels and inputs meet the current form needs without shadcn/ui or React Hook Form. No UI library or generic component system is needed.
 - Use Node’s built-in test runner with the small `tsx` development dependency to execute TypeScript tests on the supported Node baseline. No Jest/Vitest, DOM test environment, or coverage machinery is needed. The `react-server` test condition permits the `server-only` import guard when exercising the route outside Next.js. Tests use real validation and integration code, replacing only external HTTP.
 
@@ -47,7 +47,7 @@ Code becomes shared only when more than one feature genuinely needs it.
 - A small set of Tailwind colour and font tokens establishes black, warm off-white, muted secondary text, and amber accents. There is no theme provider.
 - `/images/background.jpeg` is the decorative hero background. Its actual subject is carved pumpkins; the explicitly named asset is used rather than substituting a crowd photograph. A separate oversized `next/image` layer uses cover cropping and 4px blur, with a black overlay that fades into the black collage area. Mobile positioning is 43% horizontally; desktop is centred horizontally at 55% vertically. Originals are not modified.
 - Mobile uses a deliberately two-line title; wider layouts use a one-line title. Form inputs each occupy their own row at every width, with visually hidden labels and visible placeholders. Content can grow beyond the viewport without clipping controls. No empty gallery placeholders are added.
-- The event page stays a Server Component. The form alone is a Client Component, with local idle/submitting/success/error state. Inputs are 44px tall and occupy separate rows. Native validation on submit is disabled so trimmed input reaches the authoritative server schema and errors can be presented consistently; required semantics, autocomplete, labels, focus styling, and field error associations remain.
+- The event page stays a Server Component. Registration and its success presentation are Client Components, with a local reducer for idle/submitting/animating-success/success/error state. Inputs are 44px tall and occupy separate rows. Native validation on submit is disabled so trimmed input reaches the authoritative server schema and errors can be presented consistently; required semantics, autocomplete, labels, focus styling, and field error associations remain.
 - Metadata includes a title, description, and `noindex, nofollow`. This is a crawler directive, not access control.
 
 ## Photo collage
@@ -87,8 +87,17 @@ Browser → POST /api/register → Zod validation → Formspark submission → J
 - The API accepts JSON only. Malformed JSON returns 400, unsupported media types return 415, validation errors return 422 with field messages, and missing configuration or upstream failure returns 503 with safe retry copy. Success returns 200 with `{ ok: true }`; failures return `{ ok: false, message, fieldErrors? }`. Responses are not cached and never echo submitted data or upstream errors.
 - Full name is trimmed, required, at most 120 characters, must contain a Unicode letter, and cannot contain control characters. Single-word names, international letters, punctuation, and internal spaces are preserved; no two-word assumption is made.
 - Email is trimmed, required, at most 254 characters, validated with Zod’s email validator, and lowercased. Dots and plus tags are retained. Unknown request fields are stripped before forwarding.
-- The client validates the JSON result before using it, locks submission immediately with a ref, disables controls while pending, and announces loading and success through a live region. Failures preserve values and show an alert plus associated field errors; focus moves to the first invalid input or the failure alert. Success focuses the live message and replaces the form with “YOU’RE ON THE LIST” until reload; there is no animation or persistent browser state.
+- The client validates the JSON result before using it, locks submission immediately with a ref, disables controls while pending, and announces loading through a live region. Failures preserve values and show an alert plus associated field errors; focus moves to the first invalid input or the failure alert. Only a successful HTTP response with a valid `{ ok: true }` result enters the success flow. There is no persistent browser state.
 - Submission requires JavaScript. The form specifies POST so a non-JavaScript submission cannot put personal data into a query string; the JSON-only endpoint returns an explanatory error in that case.
+
+### Success experience
+
+- The local reducer enters `animating-success` after confirmed acceptance, then `success` when Motion completes the 2.6-second sequence after the image loads. Failures cannot enter this flow; terminal success cannot replay or time out to the form.
+- A fixed, noninteractive black overlay is portaled to the body so the hero stacking context cannot confine it. `/images/jump-scare.webp` is the supplied 26-frame animated WebP: one second of action followed by a one-second final-frame hold. It is served unoptimized and mounted only after confirmed success. Playback choreography starts on image load; an image error skips to the final copy. There is no image preload that could start the animation before submission.
+- The entrance starts with a roughly 50ms white flash at 85% opacity, then about 100ms of black before the image snaps into view with a small horizontal shift and scale jolt. Its own lunge supplies the scare while a slow 6% push brings it closer. The closing frames turn saturated red from 1040–1352ms. The exit cuts to a single white flash at 85% opacity for roughly 50ms, then black, then one closer red-image glimpse around 1730–1820ms, then black again. This hides the image before its next loop; the blackout and success text resolve by 2600ms. The image fills the viewport with a soft edge mask, and the page itself does not shake. Motion definitions stay in local constants; no continuous flashing is added.
+- The event details, registration introduction, and form are replaced by a large, centered “YOU’RE ON THE LIST” in Cinzel beneath “HALLOWEEN PARTY 2026”. Event copy is passed from the Server Component into the registration area as children, so it disappears together with the form. The full area’s measured height becomes the success section’s minimum height, preserving hero and collage placement while allowing content to grow. The final state stays until reload/navigation.
+- The motion preference is read when acceptance arrives. Reduced motion goes straight to final success; changing to reduced motion during the sequence ends it. CSS also hides the blackout and removes text opacity effects under that media query.
+- During choreography, success content is inert and hidden from assistive technology. At completion, focus moves to the section labelled by its heading, without scrolling. Success is not duplicated in the pending live region. The decorative overlay is always hidden from assistive technology and removed on completion.
 
 ## Formspark boundary
 
@@ -108,17 +117,16 @@ Formspark read API → server-only adapter → unique-email calculation → cach
 - `InterestMessage` uses Next.js 16.3’s stable `io()` inside a null-fallback Suspense boundary, so reads start outside build-time prerendering and cannot block the registration shell. Its private `use cache` function stores only the display string or null, using `cacheLife({ stale: 300, revalidate: 300, expire: 600 })`. Native HTTP reads use `no-store` so raw submissions are not separately cached.
 - The default Next.js cache lives in the Node process. Requests after five minutes trigger background refresh; after ten minutes without refresh, a request waits for fresh data within the optional message boundary. Stale content can appear during refresh. A failed refresh stores null and hides the message on subsequent renders. This is request-driven revalidation, not a background worker or exact five-minute schedule.
 - Retrieval has one 10-second deadline across all pages. Missing configuration, HTTP errors, malformed envelopes, invalid/repeated cursors, and network errors produce a safe server warning and no message. With no logging framework installed, one structured `console.warn` per failed cached refresh is proportionate; it contains only a fixed message, reason code, and optional HTTP status.
-- The message sits below the privacy copy inside existing hero spacing. Its wrapper has zero layout height, preserving the collage position whether the message is visible or hidden. No client polling, optimistic count increment, registration-flow change, or success animation is added.
+- The message sits below the registration area inside existing hero spacing. Its wrapper has zero layout height, preserving the collage position whether the message is visible or hidden. It performs no client polling or optimistic count increment and is independent of the success animation.
 
 See [interest setup](interest.md) for credentials, API references, cache behavior, and live verification.
 
 ## Deferred concerns
 
-Stage 5 does **not** implement:
+Stage 6 does **not** implement:
 
 - Registration-time duplicate prevention, honeypot, or rate limiting.
 - Custom confirmation-email infrastructure; dashboard autoresponder setup is manual.
-- Blackout/flicker/glitch animation or the final animated success experience.
 - Analytics.
 - Apache configuration, Cloudflare Tunnel configuration, systemd, or GitHub Actions deployment.
 - Docker, SSH deployment, or production environment configuration.

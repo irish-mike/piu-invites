@@ -23,7 +23,9 @@ The adapter times out after 10 seconds and never retries automatically. A lost r
 
 ## Verification
 
-Run the commands in the repository README. Automated tests cover schema rules, normalized forwarding, invalid JSON and media types, field errors, missing configuration, HTTP failure, and network/timeout failure. Only the external HTTP boundary is replaced in tests; no test data reaches Formspark.
+Run the commands in the repository README. Automated tests cover schema rules, normalized forwarding, invalid JSON and media types, field errors, missing configuration, HTTP failure, and network/timeout failure. Reducer tests cover pending, confirmed success, completion, height retention, reduced-motion bypass, failure/retry, and protection against replay. Only the external HTTP boundary is replaced in integration tests; no test data reaches Formspark.
+
+For browser verification, use an isolated local upstream simulation or a configured test form. Check desktop and mobile: submission stays pending before acceptance, then the animated-image entrance, playback, and exit sequence settles on the large success heading and removes the form, event details, and registration introduction. Confirm the collage stays in place, the page scrolls, focus reaches the success section without moving the viewport, and success persists. Simulate a failed response and retry to confirm errors retain their accessible treatment and never animate. Enable the system’s reduced-motion preference and repeat: final success should appear directly, without blackout or animated imagery. Also check a preference change during the sequence. Animation frames are reviewed visually rather than pixel-tested.
 
 Before relying on real registrations:
 
@@ -31,4 +33,4 @@ Before relying on real registrations:
 - Confirm the page shows “YOU’RE ON THE LIST” and the dashboard autoresponder arrives with the intended copy and reply destination.
 - Check repeated-email behavior in that form; the application currently promises no deduplication.
 
-Local simulated success is not evidence of Formspark storage or email delivery. Rate limiting, honeypot protection, animation, analytics, and deployment remain deferred. The separate [public interest feature](interest.md) deduplicates read submissions without changing registration behavior.
+Local simulated success is not evidence of Formspark storage or email delivery. Rate limiting, honeypot protection, analytics, and deployment remain deferred. The separate [public interest feature](interest.md) deduplicates read submissions without changing registration behavior.

@@ -1,0 +1,49 @@
+.success {
+  display: grid;
+  align-content: center;
+  color: var(--color-parchment);
+}
+
+.heading {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+.blackout {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  pointer-events: none;
+  background: #000;
+  overflow: hidden;
+}
+
+.scare {
+  position: absolute;
+  inset: -8px;
+  mask-image: radial-gradient(ellipse at center, #000 40%, transparent 80%);
+}
+
+.scareImage {
+  object-fit: cover;
+  object-position: center;
+}
+
+.flash {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blackout {
+    display: none;
+  }
+
+  .heading {
+    opacity: 1 !important;
+  }
+}
