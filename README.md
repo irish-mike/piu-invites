@@ -3,8 +3,8 @@
 An event interest-registration website for **Hocus Pocus Halloween Party 2026**, organised by PIÙ.
 Registering will express interest, not a commitment to attend.
 
-**Status: Stage 2 — static visual foundation. Development is local only.**
-The event page includes typography, background photography, a presentation-only registration form, and footer. The form does not send or store submissions. Functional registration, the photo collage, success animation, Formspark, analytics, and deployment are intentionally deferred.
+**Status: Stage 3 — complete static composition. Development is local only.**
+The event page includes typography, background photography, a presentation-only registration form, a six-photo printed collage, and footer. The form does not send or store submissions. Functional registration, success animation, Formspark, analytics, and deployment are intentionally deferred.
 
 ## Stack
 

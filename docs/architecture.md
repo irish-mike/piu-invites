@@ -6,7 +6,7 @@ A one-page event interest-registration website for **Hocus Pocus Halloween Party
 Registration will express interest, not a commitment to attend.
 Multi-event support is outside the current scope.
 
-Stage 2 builds on the project foundation with a static event page: typography, background photography, a presentation-only registration form, and footer. Everything described below as planned is unimplemented.
+Stage 3 completes the static event composition: typography, background photography, a presentation-only registration form, a six-photo collage, and footer. Everything described below as planned is unimplemented.
 Development is local only. The eventual hostname is `hocus-pocus-halloween-party.piuinvites.org`;
 no hostname or deployment configuration is introduced here.
 
@@ -23,7 +23,7 @@ Introduce small vertical feature slices only when real code needs them. Framewor
 feature-specific presentation, behavior, types, and tests stay with the feature that owns them.
 Code becomes shared only when more than one feature genuinely needs it.
 
-`src/app` holds the thin page entry point, root layout, font setup, metadata, and global Tailwind tokens. `src/features/event/event-page.tsx` owns the event composition, background, and footer. `src/features/registration/registration-form.tsx` owns the static form. No empty integration or shared folders are needed.
+`src/app` holds the thin page entry point, root layout, font setup, metadata, and global Tailwind tokens. `src/features/event/event-page.tsx` owns the event composition, background, and footer. Its sibling `photo-collage.tsx` and CSS module own the collage. `src/features/registration/registration-form.tsx` owns the static form. No empty integration or shared folders are needed.
 
 ## Principles
 
@@ -45,11 +45,24 @@ Code becomes shared only when more than one feature genuinely needs it.
 
 - Cinzel provides display typography, Libre Baskerville editorial text, and Inter form/UI text. `next/font/google` downloads fonts at compile time and self-hosts them; visitors do not request fonts from Google.
 - A small set of Tailwind colour and font tokens establishes black, warm off-white, muted secondary text, and amber accents. There is no theme provider.
-- `/images/background.jpeg` is the decorative background. Its actual subject is carved pumpkins; the explicitly named asset is used rather than substituting a crowd photograph. A separate oversized `next/image` layer uses cover cropping and 4px blur, with a black overlay that fades into the footer. Mobile positioning is 43% horizontally; desktop is centred horizontally at 55% vertically. Originals are not modified.
+- `/images/background.jpeg` is the decorative hero background. Its actual subject is carved pumpkins; the explicitly named asset is used rather than substituting a crowd photograph. A separate oversized `next/image` layer uses cover cropping and 4px blur, with a black overlay that fades into the black collage area. Mobile positioning is 43% horizontally; desktop is centred horizontally at 55% vertically. Originals are not modified.
 - Mobile uses a deliberately two-line title; wider layouts use a one-line title. Form inputs each occupy their own row at every width, with centred labels. Content can grow beyond the viewport without clipping controls. No empty gallery placeholders are added.
 - The event page stays a Server Component. The form alone is a Client Component to prevent default submission, with no React state, request, validation schema, or success handling. Native validation on submit is disabled for this presentation-only stage; fields still expose their required semantics.
 - Metadata includes a title, description, and `noindex, nofollow`. This is a crawler directive, not access control.
-- All six DSCF photographs are reserved for a later collage, without an assigned visual priority or order.
+
+## Photo collage
+
+- `PhotoCollage` is a Server Component within event presentation. Its private `PrintedPhoto` component shares the frame and Next.js image markup; the six photographs and their placements remain explicit. There is no gallery framework, state, interaction, or new dependency.
+- The CSS module keeps frame treatment and the three responsive compositions together. Warm paper (#e4dac8), a faint corner tint, subtly uneven corner radii, and restrained shadows provide the aged-print effect. Padding is 2–3px along the top/sides and 3–5px below, plus a 1px edge. Images have no colour filter or added texture.
+- The group landscape uses a 3:2 frame. The goblet and top-hat portraits use 3:4 crops positioned at 58% and 38% vertically. The DJ and cyclist use 4:5 crops positioned at 66% and 42% to reduce empty background and foreground while retaining faces and costume details. The masked landscape uses a slightly tighter 1.45:1 ratio at 57% horizontally. Clipped image windows allow additional zoom of 14% for PIÙ, 30% for the DJ, and 25% for the cyclist, with individual transform origins keeping the subjects visible. These are CSS presentation changes; source files remain unchanged. The same crops work across all three compositions.
+- Desktop (960px and up) uses the three-person landscape as the largest, upper-centre anchor. The top-hat portrait sits to the left, PIÙ with the goblet sits at the far right, and the masked close-up supports the centre. The cyclist sits at lower left and the DJ at lower right. Explicit layering joins all six into one compact cluster; the DJ is in front of the mask's outer edge to keep the DJ's face visible. Sizes follow the subjects and composition, not filenames or a permanent priority system.
+- Mobile puts the group landscape first, then the top-hat and PIÙ portraits as an overlapping pair, the masked landscape, and the cyclist and DJ as a final overlapping pair. PIÙ and the DJ occupy the right-hand positions. At 640–959px, a separate tablet arrangement widens the anchor and brings the lower portraits together. Uneven overlaps, varied rotations from 0.7–3.3 degrees, and black space around the cluster maintain the physical-print treatment.
+- The collage is capped at 1080px. Its reserved aspect ratio changes with the composition to keep absolute photo placement clear of the closing note. Negative top margins of 24px, 32px, and 40px pull the prints into the hero's lower spacing at mobile, tablet, and desktop widths, while keeping the form clear.
+- A small centred Cinzel closing note, “COSTUMES ENCOURAGED.”, follows the collage with controlled breathing room. A short amber line leads into the quiet attribution footer; there is no full-width divider or additional CTA.
+- All six images use Next.js responsive delivery with intrinsic dimensions, layout-specific `sizes`, and default lazy loading. Only the decorative hero image is preloaded. Original assets remain unchanged.
+- Concise alt text describes visible subjects and costumes. The collage has an accessible section label without a visible heading; photographs are noninteractive and add no keyboard stops.
+
+Files used: `group.webp` (three friends), `piu.webp` (goblet), `witchdoctor.webp` (top hat), `skeloton.webp` (skull mask), `dj.webp` (DJ), and `bike.webp` (cyclist).
 
 ### Tooling compatibility to review
 
@@ -90,9 +103,8 @@ No interest fetching, calculation, caching, or display is implemented now.
 
 ## Deferred concerns
 
-Stage 2 does **not** implement:
+Stage 3 does **not** implement:
 
-- Photo collage or Polaroid treatment.
 - Functional registration, registration API, Zod registration schema, or Formspark integration.
 - Duplicate detection, interest calculation, autoresponder, honeypot, or rate limiting.
 - Success states or blackout/flicker/glitch animation.

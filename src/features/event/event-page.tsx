@@ -1,10 +1,11 @@
 import Image from "next/image";
 import type { ReactElement } from "react";
 import { RegistrationForm } from "@/features/registration/registration-form";
+import { PhotoCollage } from "./photo-collage";
 
 const heroClasses = `
-  relative isolate flex min-h-svh items-center justify-center overflow-hidden
-  px-6 pt-14 pb-20 sm:px-10 sm:pt-20 sm:pb-28
+  relative isolate flex items-center justify-center overflow-hidden
+  px-6 pt-14 pb-12 sm:px-10 sm:pt-20 sm:pb-16
 `;
 
 const backgroundOverlayClasses = `
@@ -24,60 +25,72 @@ const subtitleClasses = `
 `;
 
 const footerClasses = `
-  bg-ink px-6 pb-10 text-center font-editorial text-muted sm:px-10 sm:pb-8
+  bg-ink px-6 pb-12 text-center font-editorial text-muted sm:px-10 sm:pb-14
 `;
 
 const footerContentClasses = `
   mx-auto flex max-w-6xl flex-col items-center gap-4
-  border-t border-parchment/10 pt-8 sm:flex-row sm:justify-between
+  pt-9 sm:flex-row sm:justify-between sm:pt-12
+`;
+
+const closingNoteClasses = `
+  px-6 pt-16 text-center font-display text-xs tracking-[0.2em]
+  text-parchment/75 sm:pt-20 sm:text-sm
 `;
 
 export function EventPage(): ReactElement {
   return (
     <>
-      <main className={heroClasses}>
-        <div aria-hidden="true" className="pointer-events-none absolute -inset-4 -z-20">
-          <Image
-            src="/images/background.jpeg"
-            alt=""
-            fill
-            preload
-            sizes="100vw"
-            className="object-cover object-[43%_center] blur-[4px] sm:object-[center_55%]"
-          />
-        </div>
-        <div
-          aria-hidden="true"
-          className={backgroundOverlayClasses}
-        />
-
-        <div className="w-full max-w-5xl text-center">
-          <header>
-            <h1 className={titleClasses}>
-              <span className="block sm:inline">HOCUS</span>{" "}
-              <span className="block sm:inline">POCUS</span>
-            </h1>
-            <p className={subtitleClasses}>
-              HALLOWEEN PARTY 2026
-            </p>
-            <div aria-hidden="true" className="mx-auto my-7 h-px w-12 bg-amber/70 sm:my-8" />
-            <p className="font-editorial text-lg leading-relaxed sm:text-xl">
-              Saturday 31st October
-            </p>
-            <p className="mt-2 font-editorial text-xs leading-relaxed text-muted sm:text-sm">
-              Gates 7pm · Secret location
-            </p>
-          </header>
-
-          <div className="mx-auto mt-9 max-w-lg sm:mt-10">
-            <p
-              id="registration-intro"
-              className="mx-auto max-w-md text-balance font-editorial text-sm leading-7 text-parchment/90"
-            >
-              Register your interest for early ticket offers, party updates and arrival perks.
-            </p>
-            <RegistrationForm />
+      <main>
+        <div className={heroClasses}>
+          <div aria-hidden="true" className="pointer-events-none absolute -inset-4 -z-20">
+            <Image
+              src="/images/background.jpeg"
+              alt=""
+              fill
+              preload
+              sizes="100vw"
+              className="object-cover object-[43%_center] blur-[4px] sm:object-[center_55%]"
+            />
           </div>
+          <div
+            aria-hidden="true"
+            className={backgroundOverlayClasses}
+          />
+
+          <div className="w-full max-w-5xl text-center">
+            <header>
+              <h1 className={titleClasses}>
+                <span className="block sm:inline">HOCUS</span>{" "}
+                <span className="block sm:inline">POCUS</span>
+              </h1>
+              <p className={subtitleClasses}>
+                HALLOWEEN PARTY 2026
+              </p>
+              <div aria-hidden="true" className="mx-auto my-7 h-px w-12 bg-amber/70 sm:my-8" />
+              <p className="font-editorial text-lg leading-relaxed sm:text-xl">
+                Saturday 31st October
+              </p>
+              <p className="mt-2 font-editorial text-xs leading-relaxed text-muted sm:text-sm">
+                Gates 7pm · Secret location
+              </p>
+            </header>
+
+            <div className="mx-auto mt-9 max-w-lg sm:mt-10">
+              <p
+                id="registration-intro"
+                className="mx-auto max-w-md text-balance font-editorial text-sm leading-7 text-parchment/90"
+              >
+                Register your interest for early ticket offers, party updates and arrival perks.
+              </p>
+              <RegistrationForm />
+            </div>
+          </div>
+        </div>
+        <PhotoCollage />
+        <div className={closingNoteClasses}>
+          <p>COSTUMES ENCOURAGED.</p>
+          <div aria-hidden="true" className="mx-auto mt-7 h-px w-8 bg-amber/60" />
         </div>
       </main>
 
