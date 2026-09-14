@@ -11,7 +11,7 @@
     "start": "next start --hostname 127.0.0.1",
     "lint": "eslint . --max-warnings=0",
     "typecheck": "next typegen && tsc --noEmit",
-    "test": "node --import tsx --conditions=react-server --test src/features/registration/*.test.ts src/app/api/register/*.test.ts"
+    "test": "node --import tsx --conditions=react-server --test src/features/registration/*.test.ts src/features/interest/*.test.ts src/integrations/*.test.ts src/app/api/register/*.test.ts"
   },
   "dependencies": {
     "motion": "^13.3.0",

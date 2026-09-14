@@ -4,7 +4,7 @@
 
 Copy `.env.example` to `.env.local` and set `FORMSPARK_FORM_ID` to the ID at the end of the form’s submission URL, not the full URL. Restart the local server after changing it. Keep `.env.local` ignored by Git. The page and build work without this value, but valid submissions return a recoverable 503 error until it is set.
 
-The adapter uses Formspark’s [HTTP submission interface](https://documentation.formspark.io/examples/ajax.html). It needs only a form ID, not a management API token. It sends JSON with both required headers and treats a successful HTTP status as acceptance. No configuration is exposed through public environment variables, browser requests, or response bodies. There is no SDK or custom email provider.
+Registration submission uses Formspark’s [HTTP submission interface](https://documentation.formspark.io/examples/ajax.html). It needs only a form ID, not a management API token. It sends JSON with both required headers and treats a successful HTTP status as acceptance. No configuration is exposed through public environment variables, browser requests, or response bodies. There is no SDK or custom email provider.
 
 ## Formspark dashboard
 
@@ -31,4 +31,4 @@ Before relying on real registrations:
 - Confirm the page shows “YOU’RE ON THE LIST” and the dashboard autoresponder arrives with the intended copy and reply destination.
 - Check repeated-email behavior in that form; the application currently promises no deduplication.
 
-Local simulated success is not evidence of Formspark storage or email delivery. Rate limiting, honeypot protection, interest counts, animation, analytics, and deployment remain outside this stage.
+Local simulated success is not evidence of Formspark storage or email delivery. Rate limiting, honeypot protection, animation, analytics, and deployment remain deferred. The separate [public interest feature](interest.md) deduplicates read submissions without changing registration behavior.

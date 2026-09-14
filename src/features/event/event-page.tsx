@@ -1,5 +1,6 @@
 import Image from "next/image";
-import type { ReactElement } from "react";
+import { Suspense, type ReactElement } from "react";
+import { InterestMessage } from "@/features/interest/interest-message";
 import { RegistrationForm } from "@/features/registration/registration-form";
 import { PhotoCollage } from "./photo-collage";
 
@@ -84,6 +85,11 @@ export function EventPage(): ReactElement {
                 Register your interest for early ticket offers, party updates and arrival perks.
               </p>
               <RegistrationForm />
+              <div className="relative">
+                <Suspense fallback={null}>
+                  <InterestMessage />
+                </Suspense>
+              </div>
             </div>
           </div>
         </div>

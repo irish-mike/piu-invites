@@ -6,7 +6,7 @@ A one-page event interest-registration website for **Hocus Pocus Halloween Party
 Registration will express interest, not a commitment to attend.
 Multi-event support is outside the current scope.
 
-Stage 4 adds functional registration to the approved event composition. The form validates and submits full name and email through Next.js to Formspark, with plain success and error states. Everything described below as planned is unimplemented.
+Stage 5 adds a public interest milestone based on unique registered emails. Registration still validates and submits full name and email through Next.js to Formspark, with plain success and error states. Everything described below as planned is unimplemented.
 Development is local only. The eventual hostname is `hocus-pocus-halloween-party.piuinvites.org`;
 no hostname or deployment configuration is introduced here.
 
@@ -14,7 +14,7 @@ no hostname or deployment configuration is introduced here.
 
 One Next.js Node application renders the page and handles server-side registration requests.
 There is no separate frontend/backend application, microservice, database, or CMS.
-The static event page is prerendered; this does not commit the project to a static export.
+The event shell is prerendered, with the optional interest message streamed separately at request time. This is one Node application, not a static export.
 
 ## Application architecture
 
@@ -23,7 +23,7 @@ Introduce small vertical feature slices only when real code needs them. Framewor
 feature-specific presentation, behavior, types, and tests stay with the feature that owns them.
 Code becomes shared only when more than one feature genuinely needs it.
 
-`src/app` holds the thin page entry point, root layout, font setup, metadata, and global Tailwind tokens. `src/features/event/event-page.tsx` owns the event composition, background, and footer. Its sibling `photo-collage.tsx` and CSS module own the collage. `src/features/registration` owns the form, registration schemas, response contract, and schema tests. `src/app/api/register/route.ts` handles HTTP parsing and orchestration, with boundary tests alongside it. `src/integrations/formspark.ts` owns server-only submission HTTP. No service or repository layers are needed.
+`src/app` holds the thin page entry point, root layout, font setup, metadata, and global Tailwind tokens. `src/features/event/event-page.tsx` owns the event composition, background, and footer. Its sibling `photo-collage.tsx` and CSS module own the collage. `src/features/registration` owns the form, registration schemas, response contract, and schema tests. `src/app/api/register/route.ts` handles HTTP parsing and orchestration, with boundary tests alongside it. `src/integrations/formspark.ts` owns server-only submission and retrieval HTTP. `src/features/interest` owns unique-email counting, milestone formatting, and the cached Server Component. No service or repository layers are needed.
 
 ## Principles
 
@@ -35,7 +35,7 @@ Code becomes shared only when more than one feature genuinely needs it.
 ## Foundation decisions
 
 - Use npm and commit its lockfile for reproducible installation; no package manager was previously established.
-- Use stable framework defaults, without opt-in experimental features or React Compiler configuration.
+- Use stable framework features without experimental flags or React Compiler configuration. Enable Cache Components for Next.js 16.3’s recommended `use cache`/`cacheLife` APIs; do not use the superseded `unstable_cache` API.
 - Use ESLint with Next.js Core Web Vitals and TypeScript rules, and a separate TypeScript check.
 - Zod validates registrations on the server and API responses in the client. Motion remains installed for the later animation stage and is not imported.
 - Native labels and inputs meet the current form needs without shadcn/ui or React Hook Form. No UI library or generic component system is needed.
@@ -75,10 +75,10 @@ rules. This upstream support gap remains a maintenance concern for review.
 
 - Event presentation: the current static content and page experience.
 - Registration: form presentation, validation, submission, and result states.
-- Interest: planned interest calculation and restrained milestone display.
-- Formspark integration: server-only HTTP submission to the external registration source.
+- Interest: unique-email calculation and restrained milestone display.
+- Formspark integration: server-only HTTP submission and paginated reads from the external registration source.
 
-Event, registration, and Formspark boundaries contain real code. Interest remains deferred; no empty scaffolding is needed.
+Each boundary contains real code; no empty scaffolding is needed.
 
 ## Registration flow
 
@@ -92,25 +92,31 @@ Browser → POST /api/register → Zod validation → Formspark submission → J
 
 ## Formspark boundary
 
-Formspark stores registrations and remains the source of truth. The server-only adapter uses native fetch against `https://submit-form.com/<form-id>` with JSON Content-Type and Accept headers. Only fullName and email are forwarded; no SDK, management API token, submission scanning, or local persistence is used.
+Formspark stores registrations and remains the source of truth. Registration submission uses native fetch against `https://submit-form.com/<form-id>` with JSON Content-Type and Accept headers. Only fullName and email are forwarded; submission requires no read token. The interest feature separately uses the authenticated read API described below. There is no SDK or local registration persistence.
 
 `FORMSPARK_FORM_ID` is read at request time on the server. Missing configuration keeps the page/build usable but makes submission fail safely. The adapter has a 10-second timeout, rejects redirects, and does not retry writes automatically. The browser waits at most 15 seconds. A lost response or timeout can leave the result uncertain even if Formspark stored it; a manual retry may create a duplicate.
 
 No documented atomic email uniqueness or idempotency capability was found in the submission interface. The in-flight guard prevents repeat clicks only; repeat registrations across requests are accepted by Formspark. Reliable duplicate detection is deferred rather than adding a scan-and-submit race or a database. Confirmation email uses the dashboard autoresponder, not application email infrastructure. See [registration setup](registration.md) for configuration, official references, and live verification.
 
-## Planned interest flow
+## Public interest flow
 
-Formspark data → server-side interest calculation → rounded milestone → page render.
+Formspark read API → server-only adapter → unique-email calculation → cached milestone string → Server Component.
 
-The interest-count definition remains deferred. Hide the count below 30; display rounded milestones once eligible.
-Initial interest can likely be loaded directly by a Server Component without a browser-facing interest API.
-No interest fetching, calculation, caching, or display is implemented now.
+- Read every page of this form’s submissions using bearer authentication and opaque cursors. The API excludes spam/deleted submissions. Require `FORMSPARK_API_TOKEN` with `submissions:read`, an upgraded workspace, and the existing `FORMSPARK_FORM_ID`. No browser-facing read API is added.
+- Reuse `registrationSchema.shape.email` to trim, validate, and lowercase emails. Keep dots, plus tags, and different domains distinct. Deduplicate before counting; ignore malformed individual records or invalid emails. A malformed page or failed later page hides the message instead of returning a partial count.
+- Below 30 unique emails, render nothing. Otherwise round down in steps of ten: 39 → “30+ spirits are interested”, 40 → “40+ spirits are interested”, 137 → “130+ spirits are interested”. There is no upper milestone cap. Raw submissions, emails, and exact counts stay on the server.
+- `InterestMessage` uses Next.js 16.3’s stable `io()` inside a null-fallback Suspense boundary, so reads start outside build-time prerendering and cannot block the registration shell. Its private `use cache` function stores only the display string or null, using `cacheLife({ stale: 300, revalidate: 300, expire: 600 })`. Native HTTP reads use `no-store` so raw submissions are not separately cached.
+- The default Next.js cache lives in the Node process. Requests after five minutes trigger background refresh; after ten minutes without refresh, a request waits for fresh data within the optional message boundary. Stale content can appear during refresh. A failed refresh stores null and hides the message on subsequent renders. This is request-driven revalidation, not a background worker or exact five-minute schedule.
+- Retrieval has one 10-second deadline across all pages. Missing configuration, HTTP errors, malformed envelopes, invalid/repeated cursors, and network errors produce a safe server warning and no message. With no logging framework installed, one structured `console.warn` per failed cached refresh is proportionate; it contains only a fixed message, reason code, and optional HTTP status.
+- The message sits below the privacy copy inside existing hero spacing. Its wrapper has zero layout height, preserving the collage position whether the message is visible or hidden. No client polling, optimistic count increment, registration-flow change, or success animation is added.
+
+See [interest setup](interest.md) for credentials, API references, cache behavior, and live verification.
 
 ## Deferred concerns
 
-Stage 4 does **not** implement:
+Stage 5 does **not** implement:
 
-- Duplicate detection, interest calculation, honeypot, or rate limiting.
+- Registration-time duplicate prevention, honeypot, or rate limiting.
 - Custom confirmation-email infrastructure; dashboard autoresponder setup is manual.
 - Blackout/flicker/glitch animation or the final animated success experience.
 - Analytics.
