@@ -15,7 +15,7 @@ documents describes language applicability, not automatic enforcement by an edit
 | [Engineering principles](engineering-principles.md) | Design judgment: simplicity, readability, and meaningful boundaries. |
 | [Code standards](code-standards.md) | General implementation rules, including comments, errors, and dependencies. |
 | [TypeScript and React standards](code-standards-typescript.md) | Language guidance for this Next.js application; read alongside code standards. |
-| [Testing standards](testing-standards.md) | How to select and maintain useful tests; does not require a test framework for a placeholder page. |
+| [Testing standards](testing-standards.md) | How to select and maintain useful tests; the static page is currently checked with lint, types, builds, and browser inspection. |
 | [Logging standards](logging-standards.md) | Safe, useful logging when application logging is needed; no logging library is required now. |
 
 Principles explain why; code and language standards explain how. Their overlap is intentional.
@@ -23,5 +23,5 @@ References to optional tools in the general standards are conditional on those t
 
 ## Project-specific decisions
 
-[Architecture](architecture.md) records the agreed direction and explicitly distinguishes Stage 1 from planned work.
+[Architecture](architecture.md) records the agreed direction and explicitly distinguishes the current stage from planned work.
 Keep project decisions there rather than adding them to the general standards.

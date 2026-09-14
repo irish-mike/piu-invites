@@ -3,20 +3,19 @@
 An event interest-registration website for **Hocus Pocus Halloween Party 2026**, organised by PIÙ.
 Registering will express interest, not a commitment to attend.
 
-**Status: Stage 1 — project foundation. Development is local only.**
-The root page is a development placeholder. Registration, event design, Formspark, analytics, and deployment
-are intentionally deferred.
+**Status: Stage 2 — static visual foundation. Development is local only.**
+The event page includes typography, background photography, a presentation-only registration form, and footer. The form does not send or store submissions. Functional registration, the photo collage, success animation, Formspark, analytics, and deployment are intentionally deferred.
 
 ## Stack
 
 Next.js 16 App Router, React 19, strict TypeScript, Tailwind CSS 4, and ESLint.
 Zod and Motion are installed as requested foundation dependencies but are not used yet.
-shadcn/ui initialization is deferred until the first component is needed.
+The form uses native HTML controls; shadcn/ui is not needed for this stage.
 
 ## Local development
 
 Prerequisites: Node.js 20.9 or newer and npm. Use a supported Node.js release.
-No environment variables, credentials, or external services are needed for Stage 1.
+No environment variables, credentials, or registration services are needed. `next/font/google` downloads Cinzel, Libre Baskerville, and Inter during compilation, so the first development run or an uncached build needs access to Google Fonts. Fonts are then served locally to the browser.
 
 ```sh
 npm ci
@@ -41,7 +40,7 @@ To inspect the production build locally, run `npm start` after building and open
 ## Architecture and guidance
 
 Keep the application small: KISS, readability, meaningful DRY, and abstraction only when justified.
-Use vertical feature slices as real behavior arrives; the current source needs only `src/app`.
+`src/app` contains framework entry points, fonts, metadata, and global visual tokens. Event presentation lives in `src/features/event`; the static form lives in `src/features/registration`. Photography is in `public/images`.
 There is no multi-event platform, database, global state library, or separate backend.
 
 Read [architecture](docs/architecture.md) for project decisions and planned boundaries.

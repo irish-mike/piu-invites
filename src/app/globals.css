@@ -1,1 +1,38 @@
 @import "tailwindcss";
+
+@theme inline {
+  --font-display: var(--font-cinzel), Georgia, serif;
+  --font-editorial: var(--font-libre-baskerville), Georgia, serif;
+  --font-sans: var(--font-inter), Arial, sans-serif;
+}
+
+@theme {
+  --color-ink: #000000;
+  --color-parchment: #f2e9dd;
+  --color-muted: #b9b0a5;
+  --color-amber: #b77a44;
+  --color-amber-hover: #ca9059;
+  --color-rule: #766b60;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+    background: var(--color-ink);
+    color: var(--color-parchment);
+  }
+
+  body {
+    font-family: var(--font-sans);
+  }
+
+  ::selection {
+    background: var(--color-amber);
+    color: var(--color-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-amber-hover);
+    outline-offset: 4px;
+  }
+}

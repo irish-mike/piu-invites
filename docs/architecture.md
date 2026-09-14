@@ -6,8 +6,7 @@ A one-page event interest-registration website for **Hocus Pocus Halloween Party
 Registration will express interest, not a commitment to attend.
 Multi-event support is outside the current scope.
 
-Stage 1 establishes the project foundation only: a minimal development placeholder, framework configuration,
-local verification commands, and documentation. Everything described below as planned is unimplemented.
+Stage 2 builds on the project foundation with a static event page: typography, background photography, a presentation-only registration form, and footer. Everything described below as planned is unimplemented.
 Development is local only. The eventual hostname is `hocus-pocus-halloween-party.piuinvites.org`;
 no hostname or deployment configuration is introduced here.
 
@@ -15,7 +14,7 @@ no hostname or deployment configuration is introduced here.
 
 Eventually one Next.js Node application will render the page and handle server-side requests.
 There is no separate frontend/backend application, microservice, database, or CMS.
-Stage 1 can prerender the placeholder; this does not commit the project to a static export.
+The static event page is prerendered; this does not commit the project to a static export.
 
 ## Application architecture
 
@@ -24,8 +23,7 @@ Introduce small vertical feature slices only when real code needs them. Framewor
 feature-specific presentation, behavior, types, and tests stay with the feature that owns them.
 Code becomes shared only when more than one feature genuinely needs it.
 
-The current source structure is just `src/app`: the root layout, placeholder page, and Tailwind stylesheet.
-No empty feature, integration, or shared folders are needed.
+`src/app` holds the thin page entry point, root layout, font setup, metadata, and global Tailwind tokens. `src/features/event/event-page.tsx` owns the event composition, background, and footer. `src/features/registration/registration-form.tsx` owns the static form. No empty integration or shared folders are needed.
 
 ## Principles
 
@@ -40,10 +38,18 @@ No empty feature, integration, or shared folders are needed.
 - Use stable framework defaults, without opt-in experimental features or React Compiler configuration.
 - Use ESLint with Next.js Core Web Vitals and TypeScript rules, and a separate TypeScript check.
 - Install Zod and Motion as explicitly requested for Stage 1, without schemas, animation code, or client imports yet.
-- Defer shadcn/ui initialization until a real component is needed; a placeholder does not justify generated UI helpers
-  or a theme. No React Hook Form is needed.
-- Do not add a test framework to test framework behavior or static copy. Lint, type checking, a build, and a local
-  page smoke check are proportionate to this foundation. Apply the testing standards as application behavior arrives.
+- Native labels and inputs meet the current form needs without shadcn/ui or React Hook Form. No UI library or generic component system is needed.
+- Do not add a test framework to test framework behavior or static copy. Lint, type checking, a build, and browser checks of responsive layout, keyboard interaction, and inert submission are proportionate to this stage. Apply the testing standards as application behavior arrives.
+
+## Static visual foundation
+
+- Cinzel provides display typography, Libre Baskerville editorial text, and Inter form/UI text. `next/font/google` downloads fonts at compile time and self-hosts them; visitors do not request fonts from Google.
+- A small set of Tailwind colour and font tokens establishes black, warm off-white, muted secondary text, and amber accents. There is no theme provider.
+- `/images/background.jpeg` is the decorative background. Its actual subject is carved pumpkins; the explicitly named asset is used rather than substituting a crowd photograph. A separate oversized `next/image` layer uses cover cropping and 4px blur, with a black overlay that fades into the footer. Mobile positioning is 43% horizontally; desktop is centred horizontally at 55% vertically. Originals are not modified.
+- Mobile uses a deliberately two-line title; wider layouts use a one-line title. Form inputs each occupy their own row at every width, with centred labels. Content can grow beyond the viewport without clipping controls. No empty gallery placeholders are added.
+- The event page stays a Server Component. The form alone is a Client Component to prevent default submission, with no React state, request, validation schema, or success handling. Native validation on submit is disabled for this presentation-only stage; fields still expose their required semantics.
+- Metadata includes a title, description, and `noindex, nofollow`. This is a crawler directive, not access control.
+- All six DSCF photographs are reserved for a later collage, without an assigned visual priority or order.
 
 ### Tooling compatibility to review
 
@@ -52,15 +58,14 @@ The Next.js 16.3.5 starter selects ESLint 9. npm marks ESLint 9.39.5 as unsuppor
 compatibility. Retain the starter's compatible ESLint 9 setup for now, without forced peer overrides or disabled
 rules. This upstream support gap remains a maintenance concern for review.
 
-## Planned feature boundaries
+## Feature boundaries
 
-- Event presentation: event content and the page experience.
-- Registration: input handling, validation, submission, and result states.
-- Interest: potential-attendee estimation and restrained milestone display.
-- Formspark integration: server-side HTTP access to the external registration source.
+- Event presentation: the current static content and page experience.
+- Registration: current form presentation; validation, submission, and result states remain planned.
+- Interest: planned interest calculation and restrained milestone display.
+- Formspark integration: planned server-side HTTP access to the external registration source.
 
-These are logical boundaries. Future code may live in `src/features/event`, `src/features/registration`,
-`src/features/interest`, and `src/integrations` when justified. They do not require empty scaffolding now.
+The first two boundaries now have code in `src/features/event` and `src/features/registration`. Introduce `src/features/interest` and `src/integrations` only when they have real work to own; no empty scaffolding is needed.
 
 ## Planned Formspark boundary
 
@@ -72,26 +77,25 @@ Formspark secrets must remain on the server and must never be exposed through br
 
 Browser → Next.js endpoint → server-side validation → anti-spam / rate limiting → Formspark.
 
-The planned fields are required full name and email, with optional likely party size (1, 2, 3, or 4+).
-No form, endpoint, validation schema, or spam protection exists in Stage 1.
+The planned fields are required full name and email.
+Only the form presentation exists. There is no registration endpoint, validation schema, or spam protection.
 
 ## Planned interest flow
 
 Formspark data → server-side interest calculation → rounded milestone → page render.
 
-Estimate potential attendees rather than submitted forms: omitted party size counts as 1; 1, 2, and 3 count as
-their values; 4+ counts conservatively as 4. Hide the count below 30; display rounded milestones once eligible.
+The interest-count definition remains deferred. Hide the count below 30; display rounded milestones once eligible.
 Initial interest can likely be loaded directly by a Server Component without a browser-facing interest API.
 No interest fetching, calculation, caching, or display is implemented now.
 
 ## Deferred concerns
 
-Stage 1 does **not** implement:
+Stage 2 does **not** implement:
 
-- Final visual design, production event page, fonts, hero photography, or collage.
-- Registration form, registration API, Zod registration schema, or Formspark integration.
+- Photo collage or Polaroid treatment.
+- Functional registration, registration API, Zod registration schema, or Formspark integration.
 - Duplicate detection, interest calculation, autoresponder, honeypot, or rate limiting.
-- Success states, flicker/glitch animation, or the final footer.
+- Success states or blackout/flicker/glitch animation.
 - Analytics.
 - Apache configuration, Cloudflare Tunnel configuration, systemd, or GitHub Actions deployment.
 - Docker, SSH deployment, or production environment configuration.
