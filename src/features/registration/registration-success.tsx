@@ -8,6 +8,7 @@ import { createPortal } from "react-dom";
 import styles from "./registration-success.module.css";
 
 const duration = 2.6;
+const imageLoadTimeoutMs = 5_000;
 const blackoutAnimation = {
   opacity: [1, 1, 0],
   transition: {
@@ -68,8 +69,15 @@ export function RegistrationSuccess({ isAnimating, contentHeight, onAnimationCom
       if (preference.matches) onAnimationComplete();
     };
     preference.addEventListener("change", skipAnimation);
+    skipAnimation();
     return () => preference.removeEventListener("change", skipAnimation);
   }, [isAnimating, onAnimationComplete]);
+
+  useEffect(() => {
+    if (!isAnimating || isImageReady) return;
+    const timeout = window.setTimeout(onAnimationComplete, imageLoadTimeoutMs);
+    return () => window.clearTimeout(timeout);
+  }, [isAnimating, isImageReady, onAnimationComplete]);
 
   return (
     <>

@@ -21,6 +21,10 @@ export async function POST(request: Request): Promise<Response> {
     return respond({ ok: false, message: "We couldn’t read your registration. Please try again." }, 400);
   }
 
+  if (typeof body === "object" && body !== null && "website" in body && body.website !== "") {
+    return respond({ ok: false, message: "We couldn’t confirm your registration. Please try again shortly." }, 400);
+  }
+
   const registration = registrationSchema.safeParse(body);
 
   if (!registration.success) {

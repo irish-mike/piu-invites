@@ -18,7 +18,7 @@ export const registrationResultSchema = z.discriminatedUnion("ok", [
   z.object({ ok: z.literal(true) }),
   z.object({
     ok: z.literal(false),
-    message: z.string(),
+    message: z.string().trim().min(1),
     fieldErrors: z.object({
       fullName: z.array(z.string()).optional(),
       email: z.array(z.string()).optional(),

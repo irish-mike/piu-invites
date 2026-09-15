@@ -27,7 +27,7 @@ function request(body: unknown): Request {
 test("forwards only validated, normalized fields using the Formspark JSON interface", async () => {
   const upstream = mock.method(globalThis, "fetch", async () => Response.json({}));
   const response = await POST(request({
-    fullName: "  Aoife O’Neill  ", email: "  Aoife@Example.COM ", _replyto: "other@example.com",
+    fullName: "  Aoife O’Neill  ", email: "  Aoife@Example.COM ", website: "", _replyto: "other@example.com",
   }));
 
   assert.equal(response.status, 200);
@@ -41,6 +41,25 @@ test("forwards only validated, normalized fields using the Formspark JSON interf
   assert.ok(options?.signal instanceof AbortSignal);
   assert.equal(options?.redirect, "error");
   assert.equal(response.headers.get("cache-control"), "no-store");
+});
+
+test("rejects a populated or malformed honeypot without forwarding or revealing the reason", async () => {
+  const upstream = mock.method(globalThis, "fetch", async () => Response.json({}));
+  for (const website of ["https://spam.example", " ", null, false, 0, [], {}]) {
+    const response = await POST(request({ ...registration, website }));
+    assert.equal(response.status, 400);
+    assert.deepEqual(await response.json(), {
+      ok: false, message: "We couldn’t confirm your registration. Please try again shortly.",
+    });
+  }
+  assert.equal(upstream.mock.callCount(), 0);
+});
+
+test("permits clients that omit the honeypot without adding it to the upstream payload", async () => {
+  const upstream = mock.method(globalThis, "fetch", async () => Response.json({}));
+  const response = await POST(request(registration));
+  assert.equal(response.status, 200);
+  assert.deepEqual(JSON.parse(String(upstream.mock.calls[0].arguments[1]?.body)), registration);
 });
 
 test("returns field errors without contacting Formspark for invalid registration", async () => {

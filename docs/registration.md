@@ -15,6 +15,10 @@ Registration submission uses Formspark’s [HTTP submission interface](https://d
 
 These settings are manual; application code does not enable or verify the [Formspark autoresponder](https://documentation.formspark.io/dashboard/autoresponder.html). Challenge-based spam protection is not wired into this stage, so enabling a dashboard challenge would require corresponding application work.
 
+## Basic spam protection
+
+The form includes an off-screen `website` honeypot with `aria-hidden`, `tabIndex={-1}`, and autocomplete disabled. It is sent in the JSON request but never forwarded to Formspark. A populated or malformed value returns a generic 400 failure before any upstream call. Empty or omitted values allow normal validation and submission. This is a lightweight filter; stronger rate limiting remains infrastructure work.
+
 ## Duplicate and failure behavior
 
 The browser blocks repeat submissions while a request is pending. That is not email deduplication across visits or requests. Formspark’s [duplicate-submission guidance](https://documentation.formspark.io/troubleshooting/common-issues.html) describes separate accepted entries, and its [API reference](https://documentation.formspark.io/api/reference.html) does not document an atomic email-uniqueness operation for submissions. We have not implemented “already on the list”: scanning past submissions would add expense and race conditions, and a database is outside scope.
@@ -23,9 +27,9 @@ The adapter times out after 10 seconds and never retries automatically. A lost r
 
 ## Verification
 
-Run the commands in the repository README. Automated tests cover schema rules, normalized forwarding, invalid JSON and media types, field errors, missing configuration, HTTP failure, and network/timeout failure. Reducer tests cover pending, confirmed success, completion, height retention, reduced-motion bypass, failure/retry, and protection against replay. Only the external HTTP boundary is replaced in integration tests; no test data reaches Formspark.
+Run the commands in the repository README. Automated tests cover schema rules, normalized forwarding, invalid JSON and media types, field errors, missing configuration, HTTP failure, network/timeout failure, honeypot rejection before upstream access, and malformed/empty-error API responses. Reducer tests cover pending, confirmed success, completion, height retention, reduced-motion bypass, failure/retry, and protection against replay. Only the external HTTP boundary is replaced in integration tests; no test data reaches Formspark.
 
-For browser verification, use an isolated local upstream simulation or a configured test form. Check desktop and mobile: submission stays pending before acceptance, then the animated-image entrance, playback, and exit sequence settles on the large success heading and removes the form, event details, and registration introduction. Confirm the collage stays in place, the page scrolls, focus reaches the success section without moving the viewport, and success persists. Simulate a failed response and retry to confirm errors retain their accessible treatment and never animate. Enable the system’s reduced-motion preference and repeat: final success should appear directly, without blackout or animated imagery. Also check a preference change during the sequence. Animation frames are reviewed visually rather than pixel-tested.
+The temporary success injection is removed, and there is no preview flag. For browser verification without credentials, use an isolated, disposable loopback QA fixture outside the application. Remove it afterward; the normal production server must retain the real registration route. Check desktop and mobile: submission stays pending before acceptance, then the animated-image entrance, playback, and exit sequence settles on the large success heading and removes the form, event details, and registration introduction. Confirm the collage stays in place, the page scrolls, focus reaches the success section without moving the viewport, and success persists. Simulate a failed response and retry to confirm errors retain their accessible treatment and never animate. Enable the system’s reduced-motion preference and repeat: final success should appear directly, without blackout or animated imagery. Also check a preference change during the sequence. Animation frames are reviewed visually rather than pixel-tested.
 
 Before relying on real registrations:
 
@@ -33,4 +37,6 @@ Before relying on real registrations:
 - Confirm the page shows “YOU’RE ON THE LIST” and the dashboard autoresponder arrives with the intended copy and reply destination.
 - Check repeated-email behavior in that form; the application currently promises no deduplication.
 
-Local simulated success is not evidence of Formspark storage or email delivery. Rate limiting, honeypot protection, analytics, and deployment remain deferred. The separate [public interest feature](interest.md) deduplicates read submissions without changing registration behavior.
+Local simulated success is not evidence of Formspark storage or email delivery. Stronger rate limiting, analytics, and deployment remain deferred. The separate [public interest feature](interest.md) deduplicates read submissions without changing registration behavior.
+
+The jump-scare asset can fail independently of registration. A missing image skips directly to confirmation; a request that stalls is bounded by five seconds. Neither case retries registration or loses the confirmed success. See [local QA](local-qa.md) for observed results.

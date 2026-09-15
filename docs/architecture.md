@@ -6,7 +6,7 @@ A one-page event interest-registration website for **Hocus Pocus Halloween Party
 Registration will express interest, not a commitment to attend.
 Multi-event support is outside the current scope.
 
-Stage 6 adds the registration success choreography, while preserving the public interest milestone based on unique registered emails. Registration validates and submits full name and email through Next.js to Formspark. Everything described below as planned is unimplemented.
+Stage 7 adds a server-enforced honeypot and hardens failure handling after local QA, while preserving the approved success choreography and public interest milestone. Registration validates and submits full name and email through Next.js to Formspark. Everything described below as planned is unimplemented.
 Development is local only. The eventual hostname is `hocus-pocus-halloween-party.piuinvites.org`;
 no hostname or deployment configuration is introduced here.
 
@@ -84,16 +84,18 @@ Each boundary contains real code; no empty scaffolding is needed.
 
 Browser → POST /api/register → Zod validation → Formspark submission → JSON result → local form state.
 
-- The API accepts JSON only. Malformed JSON returns 400, unsupported media types return 415, validation errors return 422 with field messages, and missing configuration or upstream failure returns 503 with safe retry copy. Success returns 200 with `{ ok: true }`; failures return `{ ok: false, message, fieldErrors? }`. Responses are not cached and never echo submitted data or upstream errors.
+- The API accepts JSON only. Malformed JSON and nonempty honeypots return 400, unsupported media types return 415, validation errors return 422 with field messages, and missing configuration or upstream failure returns 503 with safe retry copy. Success returns 200 with `{ ok: true }`; failures return `{ ok: false, message, fieldErrors? }`. Responses are not cached and never echo submitted data or upstream errors.
 - Full name is trimmed, required, at most 120 characters, must contain a Unicode letter, and cannot contain control characters. Single-word names, international letters, punctuation, and internal spaces are preserved; no two-word assumption is made.
 - Email is trimmed, required, at most 254 characters, validated with Zod’s email validator, and lowercased. Dots and plus tags are retained. Unknown request fields are stripped before forwarding.
 - The client validates the JSON result before using it, locks submission immediately with a ref, disables controls while pending, and announces loading through a live region. Failures preserve values and show an alert plus associated field errors; focus moves to the first invalid input or the failure alert. Only a successful HTTP response with a valid `{ ok: true }` result enters the success flow. There is no persistent browser state.
+- The optional `website` honeypot is visually hidden, excluded from assistive technology, omitted from keyboard navigation, and submitted with the form. Any supplied value other than an empty string is rejected before registration validation and Formspark, with generic failure copy and no honeypot field error. Omission remains accepted for compatibility. The honeypot is never forwarded upstream.
+- The temporary Node startup injection used for previews is removed. There is no runtime simulation flag or alternate success path in development or production. Tests replace external boundaries; local QA fixtures are kept outside the repository and removed afterward.
 - Submission requires JavaScript. The form specifies POST so a non-JavaScript submission cannot put personal data into a query string; the JSON-only endpoint returns an explanatory error in that case.
 
 ### Success experience
 
 - The local reducer enters `animating-success` after confirmed acceptance, then `success` when Motion completes the 2.6-second sequence after the image loads. Failures cannot enter this flow; terminal success cannot replay or time out to the form.
-- A fixed, noninteractive black overlay is portaled to the body so the hero stacking context cannot confine it. `/images/jump-scare.webp` is the supplied 26-frame animated WebP: one second of action followed by a one-second final-frame hold. It is served unoptimized and mounted only after confirmed success. Playback choreography starts on image load; an image error skips to the final copy. There is no image preload that could start the animation before submission.
+- A fixed, noninteractive black overlay is portaled to the body so the hero stacking context cannot confine it. `/images/jump-scare.webp` is the supplied 26-frame animated WebP: one second of action followed by a one-second final-frame hold. It is served unoptimized and mounted only after confirmed success. Playback choreography starts on image load; an image error or a five-second image-load deadline skips to the final copy. The deadline is cancelled when the image loads, success settles, or the component unmounts. There is no image preload that could start the animation before submission.
 - The entrance starts with a roughly 50ms white flash at 85% opacity, then about 100ms of black before the image snaps into view with a small horizontal shift and scale jolt. Its own lunge supplies the scare while a slow 6% push brings it closer. The closing frames turn saturated red from 1040–1352ms. The exit cuts to a single white flash at 85% opacity for roughly 50ms, then black, then one closer red-image glimpse around 1730–1820ms, then black again. This hides the image before its next loop; the blackout and success text resolve by 2600ms. The image fills the viewport with a soft edge mask, and the page itself does not shake. Motion definitions stay in local constants; no continuous flashing is added.
 - The event details, registration introduction, and form are replaced by a large, centered “YOU’RE ON THE LIST” in Cinzel beneath “HALLOWEEN PARTY 2026”. Event copy is passed from the Server Component into the registration area as children, so it disappears together with the form. The full area’s measured height becomes the success section’s minimum height, preserving hero and collage placement while allowing content to grow. The final state stays until reload/navigation.
 - The motion preference is read when acceptance arrives. Reduced motion goes straight to final success; changing to reduced motion during the sequence ends it. CSS also hides the blackout and removes text opacity effects under that media query.
@@ -123,9 +125,9 @@ See [interest setup](interest.md) for credentials, API references, cache behavio
 
 ## Deferred concerns
 
-Stage 6 does **not** implement:
+Stage 7 does **not** implement:
 
-- Registration-time duplicate prevention, honeypot, or rate limiting.
+- Registration-time duplicate prevention or infrastructure rate limiting.
 - Custom confirmation-email infrastructure; dashboard autoresponder setup is manual.
 - Analytics.
 - Apache configuration, Cloudflare Tunnel configuration, systemd, or GitHub Actions deployment.
@@ -137,3 +139,5 @@ The repository is named `piu-invites` and may eventually serve future PIÙ event
 Keep the architecture focused on this event until reuse requirements are real.
 Do not introduce a generic event platform, tenant system, hostname-based event resolution, multi-event routing,
 CMS-driven event definitions, or reusable theme system.
+
+See [local QA](local-qa.md) for responsive, accessibility, failure, privacy, and dependency checks.

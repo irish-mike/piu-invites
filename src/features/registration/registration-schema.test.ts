@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { registrationSchema } from "./registration-schema";
+import { registrationResultSchema, registrationSchema } from "./registration-schema";
 
 test("accepts a valid registration", () => {
   const registration = { fullName: "Aoife O’Neill", email: "aoife@example.com" };
@@ -38,4 +38,13 @@ test("limits field lengths and strips unrecognized fields", () => {
   assert.equal(registrationSchema.safeParse({ ...registration, fullName: "A".repeat(121) }).success, false);
   assert.equal(registrationSchema.safeParse({ ...registration, email: `${"a".repeat(250)}@example.com` }).success, false);
   assert.deepEqual(registrationSchema.parse({ ...registration, _replyto: "other@example.com" }), registration);
+});
+
+test("rejects malformed API responses including empty error messages", () => {
+  for (const response of [null, {}, { ok: "true" }, { ok: false }, { ok: false, message: "   " }, {
+    ok: false, message: "Try again.", fieldErrors: { email: "Invalid email" },
+  }]) {
+    assert.equal(registrationResultSchema.safeParse(response).success, false);
+  }
+  assert.deepEqual(registrationResultSchema.parse({ ok: true }), { ok: true });
 });

@@ -51,7 +51,7 @@ export function RegistrationForm({ children }: { children: ReactNode }): ReactEl
       const response = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({ fullName: data.get("fullName"), email: data.get("email") }),
+        body: JSON.stringify({ fullName: data.get("fullName"), email: data.get("email"), website: data.get("website") }),
         signal: AbortSignal.timeout(requestTimeoutMs),
       });
       const body: unknown = await response.json();
@@ -98,6 +98,10 @@ export function RegistrationForm({ children }: { children: ReactNode }): ReactEl
             noValidate
             onSubmit={handleSubmit}
           >
+            <div className="sr-only" aria-hidden="true">
+              <label htmlFor="registration-website">Leave this field empty</label>
+              <input id="registration-website" name="website" type="text" autoComplete="off" tabIndex={-1} disabled={isSubmitting} />
+            </div>
             <div className="grid gap-3">
               <div>
                 <label htmlFor="full-name" className="sr-only">
