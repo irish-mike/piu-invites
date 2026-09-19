@@ -47,4 +47,6 @@ test("rejects malformed API responses including empty error messages", () => {
     assert.equal(registrationResultSchema.safeParse(response).success, false);
   }
   assert.deepEqual(registrationResultSchema.parse({ ok: true }), { ok: true });
+  assert.deepEqual(registrationResultSchema.parse({ ok: true, alreadyRegistered: true }), { ok: true, alreadyRegistered: true });
+  assert.equal(registrationResultSchema.safeParse({ ok: true, alreadyRegistered: "true" }).success, false);
 });

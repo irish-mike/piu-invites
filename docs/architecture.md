@@ -6,7 +6,7 @@ A one-page event interest-registration website for **Hocus Pocus Halloween Party
 Registration will express interest, not a commitment to attend.
 Multi-event support is outside the current scope.
 
-Stage 7 adds a server-enforced honeypot and hardens failure handling after local QA, while preserving the approved success choreography and public interest milestone. Registration validates and submits full name and email through Next.js to Formspark. Everything described below as planned is unimplemented.
+Stage 7 adds a server-enforced honeypot and hardens failure handling after local QA, while preserving the approved success choreography and public interest milestone. The subsequent review adds signed browser receipts and an in-process concurrent-submission guard. Registration validates and submits full name and email through Next.js to Formspark. Everything described below as planned is unimplemented.
 Development is local only. The eventual hostname is `hocus-pocus-halloween-party.piuinvites.org`;
 no hostname or deployment configuration is introduced here.
 
@@ -84,12 +84,13 @@ Each boundary contains real code; no empty scaffolding is needed.
 
 Browser → POST /api/register → Zod validation → Formspark submission → JSON result → local form state.
 
-- The API accepts JSON only. Malformed JSON and nonempty honeypots return 400, unsupported media types return 415, validation errors return 422 with field messages, and missing configuration or upstream failure returns 503 with safe retry copy. Success returns 200 with `{ ok: true }`; failures return `{ ok: false, message, fieldErrors? }`. Responses are not cached and never echo submitted data or upstream errors.
+- The API accepts JSON only. Malformed JSON and nonempty honeypots return 400, unsupported media types return 415, validation errors return 422 with field messages, and missing configuration or upstream failure returns 503 with safe retry copy. New success returns 200 with `{ ok: true }`; a valid browser receipt returns `{ ok: true, alreadyRegistered: true }` without forwarding again. Failures return `{ ok: false, message, fieldErrors? }`. Responses are not cached and never echo submitted data or upstream errors.
 - Full name is trimmed, required, at most 120 characters, must contain a Unicode letter, and cannot contain control characters. Single-word names, international letters, punctuation, and internal spaces are preserved; no two-word assumption is made.
 - Email is trimmed, required, at most 254 characters, validated with Zod’s email validator, and lowercased. Dots and plus tags are retained. Unknown request fields are stripped before forwarding.
-- The client validates the JSON result before using it, locks submission immediately with a ref, disables controls while pending, and announces loading through a live region. Failures preserve values and show an alert plus associated field errors; focus moves to the first invalid input or the failure alert. Only a successful HTTP response with a valid `{ ok: true }` result enters the success flow. There is no persistent browser state.
+- The client validates the JSON result before using it, locks submission immediately with a ref, disables controls while pending, and announces loading through a live region. Failures preserve values and show an alert plus associated field errors; focus moves to the first invalid input or the failure alert. Only a successful HTTP response with a valid `{ ok: true }` result enters the success flow. Recognized repeats skip the animation.
+- Confirmed registrations receive an HMAC-signed cookie scoped to the normalized email and form for 180 days. Names and emails are never stored in plaintext in cookies. Receipts use HttpOnly, SameSite=Strict, Path=/api/register, no Domain, and Secure in production, with signature and expiry checked on the server. `REGISTRATION_COOKIE_SECRET` must be a stable random secret of at least 32 bytes; missing or short secrets fail before submission. Separate cookies retain several registrations in a shared browser. A Map of pending promises keyed by opaque cookie names coalesces overlapping writes in one Node process and clears them on settlement. See [registration setup](registration.md) for limitations and verification.
 - The optional `website` honeypot is visually hidden, excluded from assistive technology, omitted from keyboard navigation, and submitted with the form. Any supplied value other than an empty string is rejected before registration validation and Formspark, with generic failure copy and no honeypot field error. Omission remains accepted for compatibility. The honeypot is never forwarded upstream.
-- Local animation previews use the server-only `REGISTRATION_PREVIEW=true` setting with `NODE_ENV=development` (`npm run dev`). The route returns success immediately without validation, honeypot checks, or contacting Formspark. Preview is off by default and ignored in production; it does not store registrations or send emails. Tests replace external boundaries.
+- Local animation previews use the server-only `REGISTRATION_PREVIEW=true` setting with `NODE_ENV=development` (`npm run dev`). The route returns success immediately without validation, honeypot checks, cookies, or contacting Formspark. Preview is off by default and ignored in production; it does not store registrations or send emails. Tests replace external boundaries.
 - Submission requires JavaScript. The form specifies POST so a non-JavaScript submission cannot put personal data into a query string; the JSON-only endpoint returns an explanatory error in that case.
 
 ### Success experience
@@ -107,7 +108,7 @@ Formspark stores registrations and remains the source of truth. Registration sub
 
 `FORMSPARK_FORM_ID` is read at request time on the server. Missing configuration keeps the page/build usable but makes submission fail safely. The adapter has a 10-second timeout, rejects redirects, and does not retry writes automatically. The browser waits at most 15 seconds. A lost response or timeout can leave the result uncertain even if Formspark stored it; a manual retry may create a duplicate.
 
-No documented atomic email uniqueness or idempotency capability was found in the submission interface. The in-flight guard prevents repeat clicks only; repeat registrations across requests are accepted by Formspark. Reliable duplicate detection is deferred rather than adding a scan-and-submit race or a database. Confirmation email uses the dashboard autoresponder, not application email infrastructure. See [registration setup](registration.md) for configuration, official references, and live verification.
+No documented atomic email uniqueness or idempotency capability was found in the submission interface. Signed browser receipts prevent repeats while those cookies are available; the pending-write guard handles overlapping requests in one process. Neither guarantees uniqueness across devices, cleared cookies, lost acceptance responses, or multiple server instances. Global duplicate prevention remains deferred rather than adding a scan-and-submit race or a database. Confirmation email uses the dashboard autoresponder, not application email infrastructure. See [registration setup](registration.md) for configuration, official references, and live verification.
 
 ## Public interest flow
 
@@ -127,7 +128,7 @@ See [interest setup](interest.md) for credentials, API references, cache behavio
 
 Stage 7 does **not** implement:
 
-- Registration-time duplicate prevention or infrastructure rate limiting.
+- Global email uniqueness across browsers/instances or infrastructure rate limiting.
 - Custom confirmation-email infrastructure; dashboard autoresponder setup is manual.
 - Analytics.
 - Apache configuration, Cloudflare Tunnel configuration, systemd, or GitHub Actions deployment.

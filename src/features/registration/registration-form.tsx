@@ -40,7 +40,7 @@ export function RegistrationForm({ children }: { children: ReactNode }): ReactEl
 
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
-    if (isRequestPending.current) return;
+    if (isRequestPending.current || hasSucceeded) return;
 
     const form = event.currentTarget;
     const data = new FormData(form);

@@ -33,6 +33,12 @@ test("reduced motion goes directly from a successful response to the final state
   }), { status: "success", contentHeight: 184 });
 });
 
+test("a recognized registration shows confirmation without replaying the animation", () => {
+  const response = { ...acceptedResponse, result: { ok: true, alreadyRegistered: true } } as const;
+  assert.deepEqual(registrationReducer({ status: "submitting" }, response), { status: "success", contentHeight: 184 });
+  assert.equal(registrationReducer({ status: "submitting" }, { ...response, httpOk: false }).status, "error");
+});
+
 test("validation failure retains field errors and allows retry without animation", () => {
   const result = {
     ok: false, message: "Check your email.", fieldErrors: { email: ["Enter a valid email address."] },

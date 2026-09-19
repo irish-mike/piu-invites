@@ -32,7 +32,7 @@ export function registrationReducer(state: RegistrationState, action: Registrati
       if (!action.result.ok) return { status: "error", error: action.result };
       if (!action.httpOk) return { status: "error", error: { ok: false, message: registrationRequestError } };
       return {
-        status: action.reducedMotion ? "success" : "animating-success",
+        status: action.reducedMotion || action.result.alreadyRegistered ? "success" : "animating-success",
         contentHeight: action.contentHeight,
       };
     case "animation-finished":

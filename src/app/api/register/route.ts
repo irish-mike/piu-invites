@@ -1,13 +1,23 @@
+import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 
+import {
+  createRegistrationCookie,
+  getRegistrationCookieContext,
+  getRegistrationCookieName,
+  isRegistrationCookieValid,
+} from "@/features/registration/registration-cookie";
 import { registrationSchema, type RegistrationResult } from "@/features/registration/registration-schema";
 import { submitRegistration } from "@/integrations/formspark";
 
-function respond(result: RegistrationResult, status: number): Response {
-  return Response.json(result, { status, headers: { "Cache-Control": "no-store" } });
+// Share an ongoing write when two tabs submit before either receives its cookie.
+const pendingRegistrations = new Map<string, ReturnType<typeof submitRegistration>>();
+
+function respond(result: RegistrationResult, status: number): NextResponse {
+  return NextResponse.json(result, { status, headers: { "Cache-Control": "no-store" } });
 }
 
-export async function POST(request: Request): Promise<Response> {
+export async function POST(request: NextRequest): Promise<Response> {
   if (process.env.NODE_ENV === "development" && process.env.REGISTRATION_PREVIEW === "true") {
     return respond({ ok: true }, 200);
   }
@@ -39,11 +49,34 @@ export async function POST(request: Request): Promise<Response> {
     }, 422);
   }
 
-  const result = await submitRegistration(registration.data);
-
-  if (result !== "accepted") {
+  const cookieContext = getRegistrationCookieContext(registration.data.email);
+  if (!cookieContext) {
+    console.warn("Registration unavailable", { reason: "missing_configuration" });
     return respond({ ok: false, message: "We couldn’t confirm your registration. Please try again shortly." }, 503);
   }
 
-  return respond({ ok: true }, 200);
+  const cookieName = getRegistrationCookieName(cookieContext);
+  if (isRegistrationCookieValid(request.cookies.get(cookieName)?.value, cookieContext)) {
+    return respond({ ok: true, alreadyRegistered: true }, 200);
+  }
+
+  const existingSubmission = pendingRegistrations.get(cookieName);
+  const submission = existingSubmission ?? submitRegistration(registration.data);
+  if (!existingSubmission) pendingRegistrations.set(cookieName, submission);
+
+  try {
+    const result = await submission;
+    if (result !== "accepted") {
+      return respond({ ok: false, message: "We couldn’t confirm your registration. Please try again shortly." }, 503);
+    }
+
+    const response = respond({ ok: true }, 200);
+    response.cookies.set(createRegistrationCookie(cookieContext));
+    return response;
+  } catch {
+    console.warn("Registration unavailable", { reason: "submission_failed" });
+    return respond({ ok: false, message: "We couldn’t confirm your registration. Please try again shortly." }, 503);
+  } finally {
+    if (!existingSubmission) pendingRegistrations.delete(cookieName);
+  }
 }
