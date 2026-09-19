@@ -23,6 +23,9 @@ async function getCachedInterestMessage(): Promise<string | null> {
 
 export async function InterestMessage(): Promise<ReactElement | null> {
   await io();
+  const isInterestEnabled = Boolean(process.env.FORMSPARK_API_TOKEN?.trim());
+  if (!isInterestEnabled) return null;
+
   const message = await getCachedInterestMessage();
   return message ? <p className={messageClasses}>{message}</p> : null;
 }
