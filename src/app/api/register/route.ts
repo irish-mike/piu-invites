@@ -8,6 +8,10 @@ function respond(result: RegistrationResult, status: number): Response {
 }
 
 export async function POST(request: Request): Promise<Response> {
+  if (process.env.NODE_ENV === "development" && process.env.REGISTRATION_PREVIEW === "true") {
+    return respond({ ok: true }, 200);
+  }
+
   const contentType = request.headers.get("content-type")?.split(";")[0].trim().toLowerCase();
 
   if (contentType !== "application/json") {

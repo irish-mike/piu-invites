@@ -25,7 +25,7 @@ npm run dev
 
 Open [http://127.0.0.1:3000](http://127.0.0.1:3000). Local servers bind to the loopback interface.
 Use `npm install` when intentionally changing dependencies and include `package-lock.json` with those changes.
-Set `FORMSPARK_FORM_ID` in `.env.local` to enable registration, then restart the server. No API token is needed, and the variable must not use a `NEXT_PUBLIC_` prefix. With an empty ID, the page still runs and submissions return a recoverable error. There is no simulated-success mode or preview environment flag. See [registration setup](docs/registration.md) for Formspark dashboard configuration and the live verification checklist.
+Set `FORMSPARK_FORM_ID` in `.env.local` to enable registration, then restart the server. No API token is needed, and the variable must not use a `NEXT_PUBLIC_` prefix. With an empty ID, the page still runs and submissions return a recoverable error. To preview the success animation without submitting to Formspark, run `REGISTRATION_PREVIEW=true npm run dev`, or set `REGISTRATION_PREVIEW=true` in `.env.local` and restart the development server. Preview submissions return success immediately, including with empty fields, and skip validation and the honeypot. This setting is ignored in production (`npm start`). Refresh the page to replay. See [registration setup](docs/registration.md) for Formspark dashboard configuration and the live verification checklist.
 For public interest, also set server-only `FORMSPARK_API_TOKEN` with the `submissions:read` scope. Formspark reads require an upgraded workspace. Missing read configuration hides the optional message without affecting registration. See [interest setup](docs/interest.md).
 
 ## Verification

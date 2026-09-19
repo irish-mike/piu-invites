@@ -1,6 +1,6 @@
 # Local readiness checks
 
-Stage 7 review, 15 September 2026. No deployment, live Formspark submission, read credentials, or autoresponder configuration was used.
+Stage 7 review, 15 September 2026. No deployment, live Formspark submission, read credentials, or autoresponder configuration was used. This records the checks at that stage; a development-only `REGISTRATION_PREVIEW` flag was subsequently added for local animation previews (see [registration setup](registration.md#verification)).
 
 ## Runtime and failure checks
 

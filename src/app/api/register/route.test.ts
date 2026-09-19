@@ -3,17 +3,17 @@ import { afterEach, beforeEach, mock, test } from "node:test";
 
 import { POST } from "./route";
 
-const originalFormId = process.env.FORMSPARK_FORM_ID;
+const originalEnvironment = process.env;
 const registration = { fullName: "Aoife O’Neill", email: "aoife@example.com" };
 
 beforeEach(() => {
-  process.env.FORMSPARK_FORM_ID = "test-form";
+  process.env = { ...originalEnvironment, NODE_ENV: "test", FORMSPARK_FORM_ID: "test-form" };
+  delete process.env.REGISTRATION_PREVIEW;
 });
 
 afterEach(() => {
   mock.restoreAll();
-  if (originalFormId === undefined) delete process.env.FORMSPARK_FORM_ID;
-  else process.env.FORMSPARK_FORM_ID = originalFormId;
+  process.env = originalEnvironment;
 });
 
 function request(body: unknown): Request {
@@ -23,6 +23,49 @@ function request(body: unknown): Request {
     body: JSON.stringify(body),
   });
 }
+
+test("previews valid registrations in development without contacting Formspark", async () => {
+  process.env = { ...process.env, NODE_ENV: "development", REGISTRATION_PREVIEW: "true" };
+  delete process.env.FORMSPARK_FORM_ID;
+  const upstream = mock.method(globalThis, "fetch", async () => Response.json({}));
+
+  const response = await POST(request(registration));
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { ok: true });
+  assert.equal(response.headers.get("cache-control"), "no-store");
+  assert.equal(upstream.mock.callCount(), 0);
+});
+
+test("preview allows empty fields and populated honeypots without contacting Formspark", async () => {
+  process.env = { ...process.env, NODE_ENV: "development", REGISTRATION_PREVIEW: "true" };
+  const upstream = mock.method(globalThis, "fetch", async () => Response.json({}));
+
+  for (const body of [{ fullName: "", email: "" }, { ...registration, website: "spam" }]) {
+    const response = await POST(request(body));
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { ok: true });
+  }
+  assert.equal(upstream.mock.callCount(), 0);
+});
+
+test("uses real submission unless preview is explicitly enabled in development", async () => {
+  const upstream = mock.method(globalThis, "fetch", async () => new Response(null, { status: 503 }));
+  for (const environment of [
+    { NODE_ENV: "production", REGISTRATION_PREVIEW: "true" },
+    { NODE_ENV: "test", REGISTRATION_PREVIEW: "true" },
+    { NODE_ENV: "development", REGISTRATION_PREVIEW: "false" },
+    { NODE_ENV: "development", REGISTRATION_PREVIEW: "" },
+  ] satisfies NodeJS.ProcessEnv[]) {
+    process.env = { ...process.env, ...environment };
+    assert.equal((await POST(request(registration))).status, 503);
+  }
+  assert.equal(upstream.mock.callCount(), 4);
+  process.env = { ...process.env, NODE_ENV: "production", REGISTRATION_PREVIEW: "true" };
+  assert.equal((await POST(request({ email: "invalid" }))).status, 422);
+  assert.equal((await POST(request({ ...registration, website: "spam" }))).status, 400);
+  assert.equal(upstream.mock.callCount(), 4);
+});
 
 test("forwards only validated, normalized fields using the Formspark JSON interface", async () => {
   const upstream = mock.method(globalThis, "fetch", async () => Response.json({}));
