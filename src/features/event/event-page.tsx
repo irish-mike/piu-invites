@@ -34,9 +34,9 @@ const footerContentClasses = `
   pt-9 sm:flex-row sm:justify-between sm:pt-12
 `;
 
-const closingNoteClasses = `
-  px-6 pt-16 text-center font-display text-xs tracking-[0.2em]
-  text-parchment/75 sm:pt-20 sm:text-sm
+const prizeClasses = `
+  mx-auto mt-6 w-fit border-y border-amber/60 px-4 py-2
+  font-display text-sm tracking-[0.16em] text-amber-hover sm:text-base
 `;
 
 export function EventPage(): ReactElement {
@@ -75,14 +75,20 @@ export function EventPage(): ReactElement {
               <p className="font-editorial text-lg leading-relaxed sm:text-xl">
                 Saturday 31st October
               </p>
-              <p className="mt-2 font-editorial text-xs leading-relaxed text-muted sm:text-sm">
-                Gates 7pm · Secret location
-              </p>
+              <ul
+                aria-label="Event details"
+                className="mt-2 flex flex-wrap justify-center gap-x-3 gap-y-1 font-editorial text-xs leading-relaxed text-muted sm:text-sm"
+              >
+                <li>Hell gates open at 7pm</li>
+                <li>Secret location</li>
+                <li>Costume party</li>
+              </ul>
+              <p className={prizeClasses}>BEST COSTUME WINS 70€</p>
               <p
                 id="registration-intro"
-                className="mx-auto mt-9 max-w-md text-balance font-editorial text-sm leading-7 text-parchment/90 sm:mt-10"
+                className="mx-auto mt-7 max-w-md text-balance font-editorial text-sm leading-7 text-parchment/90 sm:mt-8"
               >
-                Register your interest for early ticket offers, party updates and arrival perks.
+                Register now to guarantee your entrance ticket.
               </p>
             </RegistrationForm>
             <div className="relative mx-auto max-w-lg">
@@ -93,16 +99,12 @@ export function EventPage(): ReactElement {
           </div>
         </div>
         <PhotoCollage />
-        <div className={closingNoteClasses}>
-          <p>COSTUMES ENCOURAGED.</p>
-          <div aria-hidden="true" className="mx-auto mt-7 h-px w-8 bg-amber/60" />
-        </div>
       </main>
 
       <footer className={footerClasses}>
         <div className={footerContentClasses}>
           <p className="text-xs">
-            Events by <span className="ml-1 font-display text-base tracking-widest text-parchment">PIÙ</span>
+            Private event by <span className="ml-1 font-display text-base tracking-widest text-parchment">PIÙ</span>
           </p>
           <p className="max-w-64 text-[0.65rem] leading-6 sm:max-w-none sm:text-xs">
             Website by Michael Grinnell <span aria-hidden="true">·</span>{" "}

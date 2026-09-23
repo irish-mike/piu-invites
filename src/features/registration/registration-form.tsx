@@ -90,7 +90,7 @@ export function RegistrationForm({ children }: { children: ReactNode }): ReactEl
           <form
             ref={formRef}
             className="mx-auto mt-7 max-w-lg"
-            aria-label="Register your interest"
+            aria-label="Register for an entrance ticket"
             aria-describedby="registration-intro registration-privacy"
             aria-busy={isSubmitting}
             action="/api/register"
@@ -143,7 +143,7 @@ export function RegistrationForm({ children }: { children: ReactNode }): ReactEl
 
             {error && <p role="alert" tabIndex={-1} className="mt-4 text-sm text-parchment">{error.message}</p>}
             <button type="submit" className={submitButtonClasses} disabled={isSubmitting}>
-              {isSubmitting ? "SUBMITTING…" : "KEEP ME UPDATED"}
+              {isSubmitting ? "SUBMITTING…" : "GUARANTEE MY TICKET"}
             </button>
             <p id="registration-privacy" className="mt-4 text-center text-[0.7rem] leading-5 text-muted">
               We’ll only contact you about this event.

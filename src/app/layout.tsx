@@ -25,7 +25,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Hocus Pocus Halloween Party 2026 | PIÙ Invites",
   description:
-    "Hocus Pocus Halloween Party 2026 by PIÙ. Saturday 31st October. Gates 7pm · Secret location. Register your interest for early ticket offers, party updates and arrival perks.",
+    "Hocus Pocus Halloween Party 2026 by PIÙ. Saturday 31st October. Hell gates open at 7pm • secret location • costume party. Register now to guarantee your entrance ticket. Best costume wins 70€.",
   robots: { index: false, follow: false },
 };
 
