@@ -83,7 +83,7 @@ export function EventPage(): ReactElement {
                 <li>Secret location</li>
                 <li>Costume party</li>
               </ul>
-              <p className={prizeClasses}>BEST COSTUME WINS 70€</p>
+              <p className={prizeClasses}>BEST COSTUME WINS 60€</p>
               <p
                 id="registration-intro"
                 className="mx-auto mt-7 max-w-md text-balance font-editorial text-sm leading-7 text-parchment/90 sm:mt-8"
